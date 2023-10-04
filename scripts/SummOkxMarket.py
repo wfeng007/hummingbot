@@ -180,19 +180,19 @@ class SummOkxMarket(ScriptStrategyBase):
                     self.liqQue.append(liqMeanV)
 
                 #
-                #离场平仓动作； 尝试平仓用MARKET市场价？限价单有可能滑单；
+                #离场平仓动作； 尝试平仓用MARKET市场价？限价单有可能滑单；okx只能用limit
                 #持多单时，自适应出场均线低于布林通道上轨，且价格下破自适应出场均线，平多；
                 if self.position_mark > 0 and liqMeanV < upper_band and  ref_price< liqMeanV: # ++ and liqMeanV>sma?
                     #@FIXME 这里卖单替代平多
                     sell_price = ref_price
-                    sell_order = OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.MARKET,
+                    sell_order = OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,
                                     order_side=TradeType.SELL, amount=Decimal(self.order_amount), price=sell_price)
                     proposalLs.append(sell_order)   
                 # 持空单时，自适应出场均线高于布林通道下轨，且价格上破自适应出场均线，平空；
                 elif self.position_mark < 0 and liqMeanV > lower_band and  ref_price> liqMeanV:
                     #@FIXME 这里买单替代平空
                     buy_price=ref_price
-                    buy_order = OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.MARKET,
+                    buy_order = OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,
                        order_side=TradeType.BUY, amount=Decimal(self.order_amount), price=buy_price)
                     proposalLs.append(buy_order)
             
