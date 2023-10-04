@@ -161,7 +161,7 @@ class SummPMM(ScriptStrategyBase):
         # 脱离基层跟踪
         # self.order_tracker.stop_tracking_limit_order(market_pair=market_pair_tpl,order_id="");
         
-        
+    #todo
     def did_cancel_order(self, cancelled_event:OrderCancelledEvent):
         #移除策略层跟踪的对应订单；
 
@@ -586,21 +586,21 @@ class InventoryInfo:
         columns = ["Asset", "AssetType", "Value", "Value pct", "Available pct"]
         data = []
         data.append([
-            self.strategyMaster.BASE_ASSET,#todo 改为从策略逻辑中提供
+            self.strategyMaster.BASE_ASSET,#
             'BASE',#
             float(self.baseInventoryValue),
             f'{self.baseRate:.2%}',
             f'{self.baseAvailableRate:.2%}' if self.baseAvailableRate is not None else 'NaN'
         ])
         data.append([
-            self.strategyMaster.QUOTE_ASSET,#todo 改为从策略逻辑中提供
+            self.strategyMaster.QUOTE_ASSET,#
             'QUOTE',#
             float(self.quoteInventoryValue),
             f'{self.quoteRate:.2%}'  ,
             f'{self.quoteAvailableRate:.2%}' if self.quoteAvailableRate is not None else 'NaN'
         ])
         data.append([
-            'Total',#todo 改为从策略逻辑中提供
+            'Total',#
             'ALL',#
             float(self.totalInventoryValue),
             f'{(self.quoteRate+self.baseRate):.2%}'  ,
