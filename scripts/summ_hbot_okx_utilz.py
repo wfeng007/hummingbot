@@ -42,7 +42,8 @@ def getCandlesDf(pairName:str='ETH-USDT',period:str="1m",limit:int=10):
         # 格式转换
         data = []
         for candleData in cdtLs:
-            tsTxt = "n/a" if int(candleData[0]) <= 0 else pandas.Timestamp(int(candleData[0]), unit='ms').strftime('%Y-%m-%d %H:%M:%S.%f')
+            tsTxt = "n/a" if int(candleData[0]) <= 0 else pandas.Timestamp(int(candleData[0]), unit='ms').strftime('%Y-%m-%d %H:%M:%S')
+            # tsTxt = "n/a" if int(candleData[0]) <= 0 else pandas.Timestamp(int(candleData[0]), unit='ms').strftime('%Y-%m-%d %H:%M:%S.%f')
             data.append([
                 tsTxt,
                 candleData[1],#
