@@ -35,6 +35,8 @@ def getCandlesDf(pairName:str='ETH-USDT',period:str="1m",limit:int=10):
         BTC-USD-SWAP 单位是 USD
         confirm    String    K线状态
         0 代表 K 线未完结，1 代表 K 线已完结。
+
+        OKX，顺序默认在从最新时间往老排序，就是时间戳大->小排序；
         '''
         columns = ["timestamp", "open", "highest", "lowest", "close","volume","volumeCcy","volumeCcyQuote","confirm"]
         

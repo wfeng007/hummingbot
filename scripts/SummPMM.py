@@ -37,13 +37,14 @@ class SummPMM(ScriptStrategyBase):
     
     
     #上下幅度
-    bid_spread = 0.150 * 0.01 #pct
-    ask_spread = 0.150 * 0.01 #pct
+    bid_spread = 0.30 * 0.01 #pct
+    ask_spread = 0.30 * 0.01 #pct
+    extend_spread =0.30 * 0.01#pct
     
     #量
-    order_amount = 0.003
+    order_amount = 0.02
     #刷新周期
-    order_refresh_time = 600 #s
+    order_refresh_time = 600*6*2 #s
     # PriceType 中也有lastTrade（最后的交易价）
     price_source = PriceType.MidPrice
     
@@ -62,7 +63,7 @@ class SummPMM(ScriptStrategyBase):
     
     STRATEGY_INFO=f"SummPMM v20230122"
 
-    
+    =
 
     def __init__(self,connectors: Dict[str, ConnectorBase]):
         '''
@@ -88,7 +89,7 @@ class SummPMM(ScriptStrategyBase):
         
         #
         #库存信息计算 基于connector.get_balance(asset)等
-        self.currentInventory=InventoryInfo(strategyMaster=self,refPrice=self.getMidPrice()) # 
+        self.currentInventory=InventoryInfo(strategyMaster=self,refPrice=self.getMidPrice(),extendSpread=self.extend_spread) # 
         
         #每次都计算，其实可以根据一定周期计算
         # self.ask_spread=self.currentInventory.newAskSpread()
@@ -492,14 +493,14 @@ class InventoryInfo:
     '''
     
     # 扩展spread在总控这里配置
-    EXTEND_SPREAD=0.15*0.01 #基于库存其实可以计算新spread或新spread的1个偏移系数
+    EXTEND_SPREAD=0.30*0.01 #基于库存其实可以计算新spread或新spread的1个偏移系数
     TARGET_BASE_PCT=50
     TOLERABLE_RANGE_PCT=5 #目标比例的，上下容忍比。pct。
     
     IS_CALC_AVAILABLE=True #是否计算可用值
     
     #@todo 这层计算都要改为同一种数据类型，比如 Decimal；Decimal与其他基本类型无法计算
-    def __init__(self,strategyMaster:SummPMM,refPrice,targetBaseRate=TARGET_BASE_PCT*0.01):
+    def __init__(self,strategyMaster:SummPMM,refPrice,targetBaseRate=TARGET_BASE_PCT*0.01,extendSpread=EXTEND_SPREAD):
         '''
         refPrice:用来计算库存价值的base-asset的参考价格
         '''
@@ -510,6 +511,7 @@ class InventoryInfo:
         self.originalBidSpread=SummPMM.bid_spread #类级别spread
         self.originalAskSpread=SummPMM.ask_spread
         
+        self.extendSpread=extendSpread
         #
         self.targetBaseRate=targetBaseRate #需要是个百分比浮点数
         self.tolerableRangeRate=InventoryInfo.TOLERABLE_RANGE_PCT*0.01 #base-pct *
@@ -624,7 +626,7 @@ class InventoryInfo:
             priChgRt=PriInvTransBySqr.calcPriChgByInvChg(invChg) #使用第1象限，幅度转换逻辑。+-价变化方向，后续转换为spread变化。
             
             # self.ask_skew_active = True
-            return self.originalAskSpread+self.EXTEND_SPREAD*priChgRt
+            return self.originalAskSpread+self.extendSpread*priChgRt
         else:
             # self.ask_skew_active = False
             return self.originalAskSpread
@@ -640,7 +642,7 @@ class InventoryInfo:
             priChgRt=PriInvTransBySqr.calcPriChgByInvChg(invChg) #使用第1象限，幅度转换逻辑。+-价变化方向，后续转换为spread变化。 #这里还要转为百分数的数值计算，原为小数
             
             # self.bid_skew_active = True
-            return self.originalBidSpread+self.EXTEND_SPREAD*priChgRt
+            return self.originalBidSpread+self.extendSpread*priChgRt
         
         else:
             # self.bid_skew_active = False

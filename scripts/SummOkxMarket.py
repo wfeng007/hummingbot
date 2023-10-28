@@ -200,7 +200,7 @@ class SummOkxMarket(ScriptStrategyBase):
                     pass
                 
 
-
+                # @TODO self._calcCloseSignal(ref_price,baseCandleDf,metrixDf,context)
                 # @TODO 增加持仓情况的升级版，仓位管理模块化；
                 # @TODO 整体以仓位状态为基础判断信号，来进行入离场操作的主流程实现。
                 # 
