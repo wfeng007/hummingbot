@@ -6,7 +6,7 @@ Created on 2023年1月25日
 import requests
 import pandas
 
-def getCandlesDf(pairName:str='ETH-USDT',period:str="1m",limit:int=10):
+def getCandlesDf(pairName:str='ETH-USDT',period:str="1m",limit:int=10)->pandas.DataFrame:
     '''
     ohlcv 格式蜡烛线信息，返回dataframe结构
     '''
@@ -78,10 +78,10 @@ def getCandlesDf(pairName:str='ETH-USDT',period:str="1m",limit:int=10):
 
 
 if __name__ == '__main__':
-    df=getCandlesDf()
-    lines = []
-    lines.extend(["getCandles()返回:"]+[" " + line for line in df.to_string(index=False).split("\n")])
-    print("\n".join(lines))
+    # df=getCandlesDf()
+    # lines = []
+    # lines.extend(["getCandles()返回:"]+[" " + line for line in df.to_string(index=False).split("\n")])
+    # print("\n".join(lines))
     pass
 
 

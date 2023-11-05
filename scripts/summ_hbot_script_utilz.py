@@ -5,7 +5,24 @@ Created on 2023年1月22日
 '''
 
 import math
+import importlib
+import sys
+import hummingbot.client.settings as settings
 
+
+def reload_module(moduleFileName):
+        """
+        重新动态加载依赖的module （脚本更新，依赖的模块也可能更新了。注意依赖的模块尽量不要有状态。）
+        Imports the script module based on its name (module file name) 
+        """
+        module_name = moduleFileName
+        module = sys.modules.get(f"{settings.SCRIPT_STRATEGIES_MODULE}.{module_name}")
+        if module is not None:
+            module = importlib.reload(module)
+        else:
+            module = importlib.import_module(f".{module_name}", package=settings.SCRIPT_STRATEGIES_MODULE)
+
+        return module
 
 class PriInvTransBySqr:
     '''
@@ -60,6 +77,8 @@ class PriInvTransBySqr:
         xR=cls._getX(invChgI)
         priChgR=xR/cls.PRI_COEFFIENT
         return priChgR
+    
+
         
 if __name__ == '__main__':
     print(PriInvTransBySqr._getY(0))
