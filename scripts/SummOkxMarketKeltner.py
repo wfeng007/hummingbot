@@ -75,6 +75,9 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
     '''
     #
 
+    # 肯特纳挤压
+    # https://www.earnforex.com/cn/MetaTrader%E6%8C%87%E6%A0%87/Bollinger-Squeeze-Basic/
+    #
 
     def strategyInitialize(self):
         '''
@@ -116,7 +119,7 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
         #根据是否candle新周期执行；
         # if nowTs not in self.bollingerDf['timestamp'].values:
         if context.isNewCandlePeriod:
-            # 如果不存在,判单为candle新周期了...
+            # 如果新周期的candle bar...
             ...
         else:
             # 如果不是新bar周期
@@ -175,9 +178,9 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
         
         return 0
 
-    def _createOrderCandi(self,order_side:TradeType,price:Decimal=None):
-        return OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,\
-                order_side=order_side, amount=Decimal(self.order_amount), price=price)
+    # def _createOrderCandi(self,order_side:TradeType,price:Decimal=None):
+    #     return OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,\
+    #             order_side=order_side, amount=Decimal(self.order_amount), price=price)
     
     def format_status(self)->str:
         '''

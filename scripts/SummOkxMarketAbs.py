@@ -140,11 +140,9 @@ class SummOkxMarketAbs(ScriptStrategyBase,metaclass=abc.ABCMeta):
                 #
                 self.strategyExitSignalAndProposeOrder(context)
                 #
-
-               
+                
                 # 策略-实际下单：
                 self.strategyPlaceOrder(context)
-
 
 
             except Exception as e:
@@ -220,6 +218,10 @@ class SummOkxMarketAbs(ScriptStrategyBase,metaclass=abc.ABCMeta):
         self.lastCandleTimestamp=context.nowCandleTimestamp #parse 后lastCandle已经更新；
         pass
 
+    def _createOrderCandi(self,order_side:TradeType,price:Decimal=None):
+        return OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,\
+                order_side=order_side, amount=Decimal(self.order_amount), price=price)
+
     def _place_orders(self, proposal: List[OrderCandidate],isUsingBestPrice:bool=False) -> None:
         #候选订单下单
         for order in proposal:
@@ -229,13 +231,14 @@ class SummOkxMarketAbs(ScriptStrategyBase,metaclass=abc.ABCMeta):
                     if order.order_side == TradeType.SELL else self.connectors[self.exchange].get_price_by_type(self.trading_pair, PriceType.MidPrice) 
                 order.price=plcOdrPrice
 
-            self.place_order(connector_name=self.exchange, order=order)
+            self._place_order(connector_name=self.exchange, order=order)
         pass
+
 
     #
     # 主动动作封装 action
     #  
-    def place_order(self, connector_name: str, order: OrderCandidate):
+    def _place_order(self, connector_name: str, order: OrderCandidate):
         '''
         根据订单b/s类型分别下单，（可以固定写法）
         *** self.sell，self.buy工具方法
@@ -247,6 +250,7 @@ class SummOkxMarketAbs(ScriptStrategyBase,metaclass=abc.ABCMeta):
             self.buy(connector_name=connector_name, trading_pair=order.trading_pair, amount=order.amount,
                      order_type=order.order_type, price=order.price)
 
+    
      
     def cancel_all_orders(self): #暂时没用到，取消所有底层跟踪订单
         '''

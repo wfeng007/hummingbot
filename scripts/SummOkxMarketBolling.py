@@ -266,9 +266,9 @@ class SummOkxMarketBolling(SummOkxMarketAbs_m.SummOkxMarketAbs):
         
         return 0
 
-    def _createOrderCandi(self,order_side:TradeType,price:Decimal=None):
-        return OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,\
-                order_side=order_side, amount=Decimal(self.order_amount), price=price)
+    # def _createOrderCandi(self,order_side:TradeType,price:Decimal=None):
+    #     return OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,\
+    #             order_side=order_side, amount=Decimal(self.order_amount), price=price)
     
     def format_status(self)->str:
         '''
