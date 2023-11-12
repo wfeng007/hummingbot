@@ -78,7 +78,7 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
     # 肯特纳挤压
     # https://www.earnforex.com/cn/MetaTrader%E6%8C%87%E6%A0%87/Bollinger-Squeeze-Basic/
     #
-
+    STRATEGY_INFO=f"SummOkxMarketKeltner v20231112"
     def strategyInitialize(self):
         '''
         策略脚本初始化：建立肯特纳通道数据；
@@ -87,7 +87,7 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
         self.order_amount = 0.01 
         
         self.position_mark=0 #仓位标志
-        self.isCoolingDown=False #
+        self.isCoolingDown=False #冷却标志
 
         #生成keltner数据结构
         ktnDFColumns = ["timestamp", "upper", "sma", "lower","atr"]
@@ -109,14 +109,16 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
         # context.upper_band=upper_band
         # context.sma=sma
         # context.lower_band=lower_band
-        context.nowCandlesDf # @Fixme 用ta好像要倒转df顺序nowCandlesDf 应该最新的在最后
+        #ontext.nowCandlesDf # @Fixme 用ta好像要倒转df顺序nowCandlesDf 应该最新的在最后
+        sma1=ta.sma(context.nowCandlesDf['close'],length=20)
+        self.ktnDF['sma']=sma1
         atr1=ta.atr(high=context.nowCandlesDf.highest,low=context.nowCandlesDf.lowest,close=context.nowCandlesDf.close,length=14)
         self.ktnDF['timestamp']=context.nowCandlesDf['timestamp']
         self.ktnDF['atr']=atr1
         self.ktnDF['ktn_high']=self.ktnDF['sma']+1.5*atr1
         self.ktnDF['ktn_low']=self.ktnDF['sma']-1.5*atr1
 
-        #根据是否candle新周期执行；
+        # 根据是否candle新周期执行；
         # if nowTs not in self.bollingerDf['timestamp'].values:
         if context.isNewCandlePeriod:
             # 如果新周期的candle bar...
@@ -125,29 +127,49 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
             # 如果不是新bar周期
             ...
         
-        context.ktnDF=self.ktnDF
+        context.timestamp=self.ktnDF.iloc[-1]['timestamp']
+        context.sma=self.ktnDF.iloc[-1]['sma']
+        context.atr=self.ktnDF.iloc[-1]['atr']
+        context.ktn_high=self.ktnDF.iloc[-1]['ktn_high']
+        context.ktn_low=self.ktnDF.iloc[-1]['ktn_low']
+
+
+        context.ktnDF:pandas.DataFrame=self.ktnDF
         # self.log_with_clock(logging.INFO, f"bolling is ok!") 调试
+        
 
         pass
 
     def strategyEntrySignalAndProposeOrder(self,context:Context):
         '''
-            入场信号与入场下单
+            入场信号与入场下单：
+            中轨向上，并且价格升破上轨，开多单;
+            中轨向下，并且价格跌破下轨，开空单;
+            都在新的k线周期（新bar）开始时执行；
+            
             使用context.refPrice
         '''
-        context.refPrice
-        ...
+        if context.isNewCandlePeriod:
 
-    def strategyExitSignalAndProposeOrder(self,context:Context):
-        '''
-            离场信号与离场下单
-        '''
-        ...
-    ###
-        
+            proposalLs=context.proposalLs
+                #入场开仓信号计算与开仓
+            opSi=self.getEntrySignal(context=context)
+            
+            if opSi>0:
+                buy_price= None  #下单时使用bestprice
+                buy_order = self._createOrderCandi(order_side=TradeType.BUY,price=buy_price) 
+                proposalLs.append(buy_order)
+            elif opSi<0:
+                sell_price = None  #下单时使用bestprice
+                sell_order =self._createOrderCandi(order_side=TradeType.SELL,price=sell_price) 
+                proposalLs.append(sell_order)  
+            else: #opSi==0 
+                pass
+            
+            ...
 
     # 最后的3个参数之后抽象放入通用参数或放入属性df，closes最好直接用candles
-    def getBollingEntrySignal(self,ref_price:Decimal,closes:List,upper_band, sma, lower_band): 
+    def getEntrySignal(self,context:Context)-> int: 
         '''
             根据信息比如candle或candle的结束价计算入场信号，确定是否要入场；
             return  0 表示没有建仓信号
@@ -157,26 +179,85 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
             这里使用了rocThre来确定是否要建仓的另个基本过滤；前某个周期的close与当前参考价格比较来确定入场；
             @TODO 之后可以考虑对rocThre的计算可以动态比较，而不是rocThre>0 的0才是动态阈值/门限；
         '''
-
+        ref_price=context.refPrice
+        ktn_high=context.ktn_high
+        sma=context.sma
+        ktn_low=context.ktn_low
+        
+        #冷却状态是否恢复
+        #回到bb带中则冷却结束 
+        #等到下一个candle周期后再恢复
+        if self.isCoolingDown and (ref_price<ktn_high and ref_price>ktn_low) and context.isNewCandlePeriod:
+            self.isCoolingDown=False
+        
         #
         #入场信号
         #
-        #
-        rocLen=2 #入场过滤器参数
-        #@TODO 入场过滤器计算，之后替换为更合理的入场信号；
-        rocThre=float(ref_price)-closes[-rocLen] #计算过滤器值，正负方向，大小为强度；
-
+        rocLen=2 #
+        rocThre=float(sma)-context.ktnDF.iloc[-2]['sma'] #均线是 上涨 或 下跌
+        
         #
         #开仓逻辑与信号处理 
         #
         #无多头持仓，且roc过滤器为正，突破上线，开多仓；不在冷却中；
-        if self.position_mark == 0 and not self.isCoolingDown and rocThre>0 and ref_price>upper_band:
+        if self.position_mark == 0 and not self.isCoolingDown and rocThre>0 and ref_price>ktn_high:
             return 1
         #无空头仓，且roc过滤器为负，突破下线，开空仓；不在冷却中；
-        elif self.position_mark == 0 and not self.isCoolingDown and rocThre<0 and ref_price<lower_band:
+        elif self.position_mark == 0 and not self.isCoolingDown and rocThre<0 and ref_price<ktn_low:
             return -1
         
         return 0
+
+    def strategyExitSignalAndProposeOrder(self,context:Context):
+        ''' 
+            @abs 实现
+            离场信号与离场下单:与离场下单:
+            当持有多单时，价格跌破中轨，平多单；
+            当持有空单时，价格升破中轨，平空单;
+        '''
+        if context.isNewCandlePeriod: #前一次结束，新的bar出现时执行
+
+            proposalLs=context.proposalLs
+                #入场开仓信号计算与开仓
+            exSi=self.getExitSignal(context=context)
+        
+            if exSi>0:
+                buy_price= None  #下单时使用bestprice
+                buy_order = self._createOrderCandi(order_side=TradeType.BUY,price=buy_price) 
+                proposalLs.append(buy_order)
+            elif exSi<0:
+                sell_price = None  #下单时使用bestprice
+                sell_order =self._createOrderCandi(order_side=TradeType.SELL,price=sell_price) 
+                proposalLs.append(sell_order)  
+            else: #exSi==0 
+                pass
+        
+        
+        ...
+    
+    def getExitSignal(self,context:Context)->int: 
+        '''
+            离场信号与离场下单:
+            return -1 平多仓（卖出）离场    
+                    1 平空仓（买入）离场
+                    0 不做操作
+        '''
+        
+        ref_price=context.refPrice
+        ktn_high=context.ktn_high
+        sma=context.sma
+        ktn_low=context.ktn_low
+        
+        if self.position_mark > 0 and ref_price< context.sma: 
+            return -1
+        elif self.position_mark <0  and ref_price> context.sma: 
+            return 1
+        
+        return 0
+        
+    ###
+    
+
 
     # def _createOrderCandi(self,order_side:TradeType,price:Decimal=None):
     #     return OrderCandidate(trading_pair=self.trading_pair, is_maker=True, order_type=OrderType.LIMIT,\
@@ -207,10 +288,14 @@ class SummOkxMarketKeltner(SummOkxMarketAbs_m.SummOkxMarketAbs):
             lines.extend(["是否冷却中,isCoolingDown:"+str(self.isCoolingDown)])
             lines.extend([" "])
 
-            bolDf=self.bollingerDf.copy()
-            bolDf=bolDf.iloc[-3:]
-            lines.extend(["bolling信息[1m-bolling]-3:"] + ["    " + line for line in bolDf.to_string(index=False).split("\n")])
+            ##
+            ## 策略层数据展示
+            ##
+            straDf=self.ktnDF.copy()
+            straDf=straDf.iloc[-3:]
+            lines.extend(["ktn信息[1m-ktn]-3:"] + ["    " + line for line in straDf.to_string(index=False).split("\n")])
             lines.extend([" "])
+            ## 
             
             candlesDf=self.currentCandlesDf
             candlesDf=candlesDf.iloc[0:3]

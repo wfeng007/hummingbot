@@ -37,8 +37,8 @@ import pandas
 
 class Context:
     #market：
-    #refPrice
-    #proposalLs 用来向市场下单；
+    refPrice:Decimal #refPrice 当前参考价
+    proposalLs:List[OrderCandidate] #proposalLs 用来向市场下单；
 
     #candles:
     #nowCandlesDf
@@ -269,8 +269,6 @@ class SummOkxMarketAbs(ScriptStrategyBase,metaclass=abc.ABCMeta):
     #     return []
     
 
-
-    
 
 class StrategyOrderTracking:
     '''
