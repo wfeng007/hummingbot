@@ -85,7 +85,7 @@ class HistoryCommand:
                 raise
             perf = await PerformanceMetrics.create(symbol, cur_trades, cur_balances)
             if display_report:
-                self.(market, symbol, perf, precision)
+                self.report_performance_by_market(market, symbol, perf, precision)
             return_pcts.append(perf.return_pct)
         avg_return = sum(return_pcts) / len(return_pcts) if len(return_pcts) > 0 else s_decimal_0
         if display_report and len(return_pcts) > 1:
