@@ -92,13 +92,14 @@ create_instance () {
  docker run -it --log-opt max-size=10m --log-opt max-file=5 \
  --name $INSTANCE_NAME \
  --network host \
- --mount "type=bind,source=$CONF_FOLDER,destination=/conf/" \
- --mount "type=bind,source=$LOGS_FOLDER,destination=/logs/" \
- --mount "type=bind,source=$DATA_FOLDER,destination=/data/" \
- --mount "type=bind,source=$PMM_SCRIPTS_FOLDER,destination=/pmm_scripts/" \
- --mount "type=bind,source=$SCRIPTS_FOLDER,destination=/scripts/" \
+ --mount "type=bind,source=$CONF_FOLDER,destination=/home/hummingbot/conf/" \
+ --mount "type=bind,source=$LOGS_FOLDER,destination=/home/hummingbot/logs/" \
+ --mount "type=bind,source=$DATA_FOLDER,destination=/home/hummingbot/data/" \
+ --mount "type=bind,source=$PMM_SCRIPTS_FOLDER,destination=/home/hummingbot/pmm_scripts/" \
+ --mount "type=bind,source=$SCRIPTS_FOLDER,destination=/home/hummingbot/scripts/" \
  --mount "type=bind,source=$CERTS_FOLDER,destination=/home/hummingbot/.hummingbot-gateway/certs/" \
  --mount "type=bind,source=$GATEWAY_CONF_FOLDER,destination=/home/hummingbot/.hummingbot-gateway/conf/" \
+ --mount "type=bind,source=$GATEWAY_LOGS_FOLDER,destination=/home/hummingbot/gateway_logs/" \
  --mount "type=bind,source=/var/run/docker.sock,destination=/var/run/docker.sock" \
  -e CONF_FOLDER="$CONF_FOLDER" \
  -e DATA_FOLDER="$DATA_FOLDER" \
